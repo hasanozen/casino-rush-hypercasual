@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Config;
 using Game.CharacterSystem.Controllers;
 using Game.CharacterSystem.Events;
 using Game.ChipSystem.Base;
 using Game.ChipSystem.Managers;
+using Game.GateSystem.Base;
+using Game.GateSystem.Controllers;
 using UnityEngine;
 using Utils;
 using Zenject;
@@ -23,7 +26,7 @@ namespace Game.CharacterSystem.Base
         {
             _chipManager = chipManager;
         }
-        
+
         public override void Init()
         {
             base.Init();
@@ -35,25 +38,17 @@ namespace Game.CharacterSystem.Base
             _characterInputController.Init();
 
             SubscribeControllerEvents();
-            
-            GetEventManager().SubscribeEvent(CharacterEventType.ON_START, () =>
-            {
-                Timer.Instance.TimerWait(1f, () =>_characterInputController.ActivateController());
-            });
+
+            GetEventManager().SubscribeEvent(CharacterEventType.ON_START,
+                () => { Timer.Instance.TimerWait(1f, () => _characterInputController.ActivateController()); });
         }
 
         private void SubscribeControllerEvents()
         {
             // Controller Event Subscriptions
-            _characterInputController.OnLevelStarted += () =>
-            {
-                CharacterMovementController.MoveForward();
-            };
+            _characterInputController.OnLevelStarted += () => { CharacterMovementController.MoveForward(); };
 
-            _characterInputController.OnTapPressing += () =>
-            {
-                CharacterMovementController.MoveSide();
-            };
+            _characterInputController.OnTapPressing += () => { CharacterMovementController.MoveSide(); };
 
             _characterInputController.OnTapReleasing += () =>
             {
@@ -72,6 +67,25 @@ namespace Game.CharacterSystem.Base
             if (other.CompareTag("Extractor"))
             {
                 _chipManager.SubtractChip(20);
+            }
+
+            if (other.GetComponent<GateBase>() != null)
+            {
+                Foo(other.GetComponent<GateBase>());
+            }
+        }
+
+        public void Foo(GateBase gate)
+        {
+            var type = gate.EffectType;
+
+            if (type == EffectType.ADDITION || type == EffectType.MULTIPLICATION)
+            {
+                _chipManager.AddChipFromGate(gate.EffectValue);
+            }
+            else if (type == EffectType.SUBTRACTION || type == EffectType.DIVISION)
+            {
+                _chipManager.SubtractChip(gate.EffectValue);
             }
         }
 

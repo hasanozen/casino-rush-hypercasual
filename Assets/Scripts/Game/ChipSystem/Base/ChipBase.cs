@@ -3,6 +3,7 @@ using Config;
 using DG.Tweening;
 using Game.ChipSystem.Events;
 using Game.LevelSystem.Managers;
+using TMPro;
 using UnityEngine;
 using Utils;
 using Zenject;
@@ -21,10 +22,12 @@ namespace Game.ChipSystem.Base
         public bool Active { get; private set; }
         protected MeshRenderer MeshRenderer { get; set; }
         private Material Material { get; set; }
+        private TextMeshPro _valueText;
         
         public virtual void Init()
         {
             ChipEventManager = new ChipEventManager();
+            _valueText = transform.Find("ValueText").GetComponent<TextMeshPro>();
             SubscribeEvents();
         }
 
@@ -38,6 +41,11 @@ namespace Game.ChipSystem.Base
         {
             Active = false;
             gameObject.SetActive(false);
+        }
+
+        public void SetActive(bool active)
+        {
+            Active = active;
         }
 
         private void SubscribeEvents()
@@ -60,6 +68,7 @@ namespace Game.ChipSystem.Base
         private void OnValueChange()
         {
             MeshRenderer.material = Material;
+            _valueText.text = "$" + Value;
         }
 
         #endregion

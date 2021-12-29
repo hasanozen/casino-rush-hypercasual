@@ -62,6 +62,13 @@ namespace Game.ChipSystem.Base
             }
         }
 
+        public void CalculateTotalChipAmount()
+        {
+            int sum = _chips.Where(x => x.GetComponent<ChipMini>().Active)
+                .Sum(x => x.GetComponent<ChipMini>().Value);
+            
+        }
+
         public void SubscribeMember(GameObject chip)
         {
             _chips.Add(chip);
@@ -72,12 +79,16 @@ namespace Game.ChipSystem.Base
         {
             _chips.AddRange(chips);
             ReplaceChips(_chips.Count);
+            
+            CalculateTotalChipAmount();
         }
 
         public void UnsubscribeMember(GameObject chip)
         {
             chip.GetComponent<ChipMini>().GetEventManager().InvokeEvent(ChipEventType.ON_DESTACKED);
             _chips.Remove(chip);
+            
+            CalculateTotalChipAmount();
         }
 
         public void ActivateChips(int amount)
@@ -86,21 +97,37 @@ namespace Game.ChipSystem.Base
 
             for (int i = index; i < index + amount; i++)
             {
-                _chips[i].GetComponent<ChipBase>().ActivateChip();
-                _chips[i].GetComponent<ChipBase>().GetEventManager().InvokeEvent(ChipEventType.ON_STACKED);
+                _chips[i].GetComponent<ChipMini>().ActivateChip();
+                _chips[i].GetComponent<ChipMini>().GetEventManager().InvokeEvent(ChipEventType.ON_STACKED);
                 
             }
+            
+            CalculateTotalChipAmount();
         }
 
         public void DeactivateChips(int amount)
         {
-            int index = _chips.IndexOf(_chips.FirstOrDefault(x => x.GetComponent<ChipBase>().Active == false)) - 1;
+            int index = FindLastActiveChipIndex();
 
             for (int i = index; i > index - amount; i--)
             {
-                _chips[i].GetComponent<ChipBase>().GetEventManager().InvokeEvent(ChipEventType.ON_DESTACKED);
+                _chips[i].GetComponent<ChipMini>().GetEventManager().InvokeEvent(ChipEventType.ON_DESTACKED);
                 
             }
+            
+            CalculateTotalChipAmount();
+        }
+
+        private int FindLastActiveChipIndex()
+        {
+            return _chips.IndexOf(_chips.FirstOrDefault(x => x.GetComponent<ChipBase>().Active == false)) - 1;
+        }
+
+        public void DeactivateChipsByValue(int value)
+        {
+            int index = FindLastActiveChipIndex();
+            
+            //TODO: here
         }
 
         public void ReplaceChip()

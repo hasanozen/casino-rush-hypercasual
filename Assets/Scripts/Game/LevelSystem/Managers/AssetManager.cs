@@ -11,20 +11,44 @@ namespace Game.LevelSystem.Managers
         private const string OBSTACLE_PATH = "Obstacles/";
         private const string PLATFORM_PATH = "Platforms/";
         private const string OBJECT_PATH = "Objects/";
-        private const string MATERIAL_PATH = "Materials/Chip";
+        private const string CHIP_MATERIAL_PATH = "Materials/Chip";
+        private const string BASIC_MATERIAL_PATH = "Materials/Basic";
+        private const string GATE_IMAGES_POSITIVE = "Sprites/Images/Positive";
+        private const string GATE_IMAGES_NEGATIVE = "Sprites/Images/Negative";
 
-        private List<Material> _materials;
+        private List<Material> _chipMaterials;
+        private List<Material> _basicMaterials;
         private List<GameObject> _prefabObjects;
+        private List<Sprite> _gateImagesPositive;
+        private List<Sprite> _gateImagesNegative;
 
         public AssetManager()
         {
-            _materials = Resources.LoadAll<Material>(MATERIAL_PATH).ToList();
+            _chipMaterials = Resources.LoadAll<Material>(CHIP_MATERIAL_PATH).ToList();
+            _basicMaterials = Resources.LoadAll<Material>(BASIC_MATERIAL_PATH).ToList();
             _prefabObjects = Resources.LoadAll<GameObject>(OBJECT_PATH).ToList();
+            _gateImagesPositive = Resources.LoadAll<Sprite>(GATE_IMAGES_POSITIVE).ToList();
+            _gateImagesNegative = Resources.LoadAll<Sprite>(GATE_IMAGES_NEGATIVE).ToList();
         }
 
-        public Material GetMaterial(string name)
+        public Sprite GetGatePositiveImage(string name)
         {
-            return _materials?.FirstOrDefault(x => x.name == name);
+            return _gateImagesPositive?.FirstOrDefault(x => x.name == name);
+        }
+        
+        public Sprite GetGateNegativeImage(string name)
+        {
+            return _gateImagesNegative?.FirstOrDefault(x => x.name == name);
+        }
+
+        public Material GetBasicMaterial(string name)
+        {
+            return _basicMaterials?.FirstOrDefault(x => x.name == name);
+        }
+
+        public Material GetChipMaterial(string name)
+        {
+            return _chipMaterials?.FirstOrDefault(x => x.name == name);
         }
 
         public GameObject GetPrefabObject(string name)

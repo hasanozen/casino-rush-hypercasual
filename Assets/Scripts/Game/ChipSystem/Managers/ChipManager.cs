@@ -1,14 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Config;
 using Game.CharacterSystem.Base;
 using Game.ChipSystem.Base;
 using Game.ChipSystem.Events;
+using Game.GateSystem.Controllers;
 using Game.LevelSystem.Managers;
 using Game.PoolingSystem;
 using NUnit.Framework;
 using UnityEngine;
 using Zenject;
+using Random = UnityEngine.Random;
 
 namespace Game.ChipSystem.Managers
 {
@@ -20,7 +23,7 @@ namespace Game.ChipSystem.Managers
         private ObjectPooler _objectPooler;
 
         #endregion
-        
+
         private List<GameObject> _chipObjects;
         private List<GameObject> _chipMiniObjects;
         private GameObject container;
@@ -28,6 +31,9 @@ namespace Game.ChipSystem.Managers
         public Material tempMat;
 
         private int currentActivatedChipCount = 0;
+
+        //TEMP
+        private GateController _gateController;
 
         [Inject]
         private void OnInitialize(AssetManager assetManager, ObjectPooler objectPooler)
@@ -38,19 +44,51 @@ namespace Game.ChipSystem.Managers
 
         public void Init()
         {
+            _gateController = new GateController();
+            _gateController.Init(_assetManager, _objectPooler);
+            _gateController.InitializeGates();
+
             _objectPooler.Init();
             _chipObjects = new List<GameObject>();
             player = FindObjectOfType<PlayerCharacter>().transform;
-            
+
             CreateContainer();
-            
+
             CreateChips();
             FillChipValues();
             ReplaceChips();
-            
+
             CreateMiniChips();
             FillMiniChipValues();
         }
+
+        #region Gate Process
+
+        public void AddChipFromGate(int value)
+        {
+            var existingValues = FindExistingValues(GameConfig.CHIP_VALUES, value);
+
+            foreach (var keyValuePair in existingValues)
+            {
+                for (int i = 0; i < keyValuePair.Value; i++)
+                    AddChip(keyValuePair.Key);
+            }
+        }
+        
+        public void SubtractChipFromGate()
+        {
+        }
+
+        public void MultiplyChipFromGate()
+        {
+            //TODO: Toplam chip değerlerini al ve çarparak çip ekle
+        }
+
+        public void DivideChipFromGate()
+        {
+        }
+
+        #endregion
 
         public void AddChip(int value)
         {
@@ -58,17 +96,22 @@ namespace Game.ChipSystem.Managers
             chipMini.Value = value;
             chipMini.SetChipMaterial(GetChipMaterial(chipMini.Value));
             chipMini.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
-            
+
             container.GetComponent<ChipContainer>().ActivateChips(1);
-            
+
             currentActivatedChipCount++;
         }
 
         public void SubtractChip(int amount)
         {
             currentActivatedChipCount -= amount;
-            
+
             container.GetComponent<ChipContainer>().DeactivateChips(amount);
+        }
+
+        public void SubtractChip(int valueOf, int amount)
+        {
+            
         }
 
         private void CreateContainer()
@@ -108,9 +151,9 @@ namespace Game.ChipSystem.Managers
                 //component.Value = _chipObjects[i].GetComponent<Chip>().Value;
                 //component.SetChipMaterial(GetChipMaterial(component.Value));
                 //component.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
-                
+
                 _chipMiniObject.transform.SetParent(player);
-                
+
                 component.DeactivateChip();
                 i++;
             }
@@ -173,7 +216,35 @@ namespace Game.ChipSystem.Managers
                 .FirstOrDefault(x => x.Value == Value)
                 .Key;
 
-            return _assetManager.GetMaterial(key);
+            return _assetManager.GetChipMaterial(key);
         }
+        
+        private Dictionary<int, int> FindExistingValues(int[] searchingValues, int value)
+        {
+            Array.Sort(searchingValues);
+            Array.Reverse(searchingValues);
+            
+            int remaining = value;
+
+            Dictionary<int, int> counts = new Dictionary<int, int>();
+
+            for (int i = 0; i < searchingValues.Length; i++)
+            {
+                int v = searchingValues[i];
+
+                if (v <= remaining)
+                {
+                    remaining -= v;
+                    if (!counts.ContainsKey(v))
+                        counts[v] = 0;
+
+                    counts[v]++;
+                    i--;
+                }
+            }
+
+            return counts;
+        }
+
     }
 }

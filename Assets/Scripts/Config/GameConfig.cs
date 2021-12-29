@@ -23,5 +23,17 @@ namespace Config
         public static int DEFAULT_MINI_CHIP_POOL_SIZE = 300;
 
         public static int CHIP_STACK_MAX_Z = 3;
+
+        #region Gate Config
+
+        public static Color DEFAULT_GATE_POSITIVE_COLOR = new Color32(62, 157, 249, 128);
+        public static Color DEFAULT_GATE_NEGATIVE_COLOR = new Color32(255, 67, 57, 128);
+
+        public static int MAX_MULTIPLICATION_NUMBER = 5;
+        public static int MAX_DIVISION_NUMBER = 5;
+        public static int MAX_ADDITION_NUMBER = 10;
+        public static int MAX_SUBTRACTION_NUMBER = 5;
+
+        #endregion
     }
 }

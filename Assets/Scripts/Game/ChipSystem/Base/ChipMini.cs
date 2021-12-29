@@ -29,10 +29,12 @@ namespace Game.ChipSystem.Base
             Quaternion currentRotation = transform.localRotation;
             transform.parent = null;
             
+            SetActive(false);
+            
             Vector3 randomPosition = new Vector3(
-                Random.Range(transform.position.x - 1, transform.position.x + 1),
-                Random.Range(2, 5), 
-                Random.Range(transform.position.z - 5, transform.position.z + 1));
+                Random.Range(transform.position.x - 2, transform.position.x + 2),
+                Random.Range(5, 10), 
+                Random.Range(transform.position.z - 1, transform.position.z - 10));
 
             Vector3 randomRotation = new Vector3(
                 Random.Range(0, 360),

@@ -60,7 +60,7 @@ namespace Game.PoolingSystem
 
             Pool pool = pools?.FirstOrDefault(x => x.tag == tag);
 
-            GameObject parent = new GameObject("ChipParent");
+            GameObject parent = new GameObject(tag + "Parent");
             for (int i = 0; i < pool.size; i++)
             {
                 GameObject obj = Instantiate(pool.prefab, parent.transform);
@@ -104,6 +104,14 @@ namespace Game.PoolingSystem
                 obj.transform.position = Vector3.zero;
                 obj.transform.rotation = Quaternion.identity;
             }
+        }
+
+        public void DeactivateWholePool()
+        {
+            var keys = poolDictionary.Keys.ToArray();
+            
+            for (int i = 0; i < keys.Length; i++)
+                DeactivatePool(keys[i]);
         }
     }
 }
