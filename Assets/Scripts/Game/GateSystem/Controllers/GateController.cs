@@ -77,7 +77,7 @@ namespace Game.GateSystem.Controllers
         {
             EffectType effectType = gateType == GateType.POSITIVE
                 ? (EffectType)Random.Range(0, 2)
-                : (EffectType)Random.Range(3, 4);
+                : (EffectType)Random.Range(2, 4);
             
             gate.Init(gateType, effectType);
 
@@ -119,7 +119,7 @@ namespace Game.GateSystem.Controllers
                 case EffectType.DIVISION:
                     sign = "÷";
                     limit = GameConfig.MAX_DIVISION_NUMBER;
-                    Random.Range(1, limit);
+                    value = Random.Range(1, limit);
                     break;
                 default:
                     sign = "";

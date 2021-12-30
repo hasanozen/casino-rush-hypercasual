@@ -4,33 +4,28 @@ using UnityEngine;
 
 namespace Game.ChipSystem.Base
 {
-    public class ChipMini : ChipBase
+    public class ChipContained : ChipBase
     {
-        public Vector3 stackLocation;
-        
         public override void Init()
         {
             base.Init();
             MeshRenderer = transform.GetComponent<MeshRenderer>();
+            
             SubscribeEvents();
         }
 
         private void SubscribeEvents()
         {
-            GetEventManager().SubscribeEvent(ChipEventType.ON_DESTACKED, OnDestacked);
             GetEventManager().SubscribeEvent(ChipEventType.ON_STACKED, OnStacked);
+            GetEventManager().SubscribeEvent(ChipEventType.ON_DESTACKED, OnDestacked);
         }
 
         #region Event Methods
-
-        public void OnDestacked()
+        
+        private void OnDestacked()
         {
-            Transform parent = transform.parent;
-            Quaternion currentRotation = transform.localRotation;
             transform.parent = null;
-            
-            SetActive(false);
-            
+
             Vector3 randomPosition = new Vector3(
                 Random.Range(transform.position.x - 2, transform.position.x + 2),
                 Random.Range(5, 10), 
@@ -45,10 +40,7 @@ namespace Game.ChipSystem.Base
             transform.DORotate(randomRotation, .3f);
             transform.DOMove(randomPosition, .3f).OnComplete(() =>
             {
-                DeactivateChip();;
-                transform.SetParent(parent);
-                transform.localRotation = currentRotation;
-                transform.localPosition = new Vector3(stackLocation.x, (stackLocation.y - 1.0f) , stackLocation.z);
+                DeactivateChip();
             });
         }
 
@@ -59,5 +51,6 @@ namespace Game.ChipSystem.Base
         }
 
         #endregion
+        
     }
 }

@@ -64,28 +64,10 @@ namespace Game.CharacterSystem.Base
                 other.GetComponent<Chip>().DeactivateChip();
             }
 
-            if (other.CompareTag("Extractor"))
-            {
-                _chipManager.SubtractChip(20);
-            }
-
             if (other.GetComponent<GateBase>() != null)
             {
-                Foo(other.GetComponent<GateBase>());
-            }
-        }
-
-        public void Foo(GateBase gate)
-        {
-            var type = gate.EffectType;
-
-            if (type == EffectType.ADDITION || type == EffectType.MULTIPLICATION)
-            {
-                _chipManager.AddChipFromGate(gate.EffectValue);
-            }
-            else if (type == EffectType.SUBTRACTION || type == EffectType.DIVISION)
-            {
-                _chipManager.SubtractChip(gate.EffectValue);
+                GateBase gate = other.GetComponent<GateBase>();
+                _chipManager.ProcessGate(gate.EffectType, gate.EffectValue);
             }
         }
 

@@ -5,6 +5,7 @@ using Config;
 using Game.CharacterSystem.Base;
 using Game.ChipSystem.Base;
 using Game.ChipSystem.Events;
+using Game.GateSystem.Base;
 using Game.GateSystem.Controllers;
 using Game.LevelSystem.Managers;
 using Game.PoolingSystem;
@@ -26,7 +27,7 @@ namespace Game.ChipSystem.Managers
 
         private List<GameObject> _chipObjects;
         private List<GameObject> _chipMiniObjects;
-        private GameObject container;
+        private ChipContainer container;
         private Transform player;
         public Material tempMat;
 
@@ -57,118 +58,54 @@ namespace Game.ChipSystem.Managers
             CreateChips();
             FillChipValues();
             ReplaceChips();
-
-            CreateMiniChips();
-            FillMiniChipValues();
         }
 
-        #region Gate Process
-
-        public void AddChipFromGate(int value)
+        public void ProcessGate(EffectType effectType, int value)
         {
-            var existingValues = FindExistingValues(GameConfig.CHIP_VALUES, value);
-
-            foreach (var keyValuePair in existingValues)
+            switch (effectType)
             {
-                for (int i = 0; i < keyValuePair.Value; i++)
-                    AddChip(keyValuePair.Key);
+                case EffectType.ADDITION:
+                    container.ChipAddition(value);
+                    break;
+                case EffectType.SUBTRACTION:
+                    container.ChipSubtraction(value);
+                    break;
+                case EffectType.MULTIPLICATION:
+                    container.ChipMultiplication(value);
+                    break;
+                case EffectType.DIVISION:
+                    container.ChipDivision(value);
+                    break;
+                default:
+                    Debug.Log("Any effect type found with specified type");
+                    break;
             }
-        }
-        
-        public void SubtractChipFromGate()
-        {
-        }
-
-        public void MultiplyChipFromGate()
-        {
-            //TODO: Toplam chip değerlerini al ve çarparak çip ekle
-        }
-
-        public void DivideChipFromGate()
-        {
-        }
-
-        #endregion
-
-        public void AddChip(int value)
-        {
-            var chipMini = _chipMiniObjects[currentActivatedChipCount].GetComponent<ChipMini>();
-            chipMini.Value = value;
-            chipMini.SetChipMaterial(GetChipMaterial(chipMini.Value));
-            chipMini.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
-
-            container.GetComponent<ChipContainer>().ActivateChips(1);
-
-            currentActivatedChipCount++;
-        }
-
-        public void SubtractChip(int amount)
-        {
-            currentActivatedChipCount -= amount;
-
-            container.GetComponent<ChipContainer>().DeactivateChips(amount);
-        }
-
-        public void SubtractChip(int valueOf, int amount)
-        {
-            
         }
 
         private void CreateContainer()
         {
             var player = FindObjectOfType<PlayerCharacter>().transform;
-            container = Instantiate(_assetManager.GetPrefabObject("Container"), player);
+            container = Instantiate(_assetManager.GetPrefabObject("Container"), player).AddComponent<ChipContainer>();
 
             container.transform.position = new Vector3(
                 player.position.x,
                 player.localScale.y,
                 player.position.z - player.localScale.z
             );
-
-            container.AddComponent<ChipContainer>();
-            container.GetComponent<ChipContainer>().Init(_objectPooler);
-        }
-
-        private void CreateMiniChips()
-        {
-            _objectPooler.CreatePool(
-                NameFields.DEFAULT_MINI_CHIP_POOL_TAG,
-                _assetManager.GetPrefabObject(NameFields.DEFAULT_MINI_CHIP_POOL_TAG),
-                GameConfig.DEFAULT_MINI_CHIP_POOL_SIZE);
-
-            _objectPooler.SpawnObjectsWithTag("Chip_Mini");
-            _chipMiniObjects = _objectPooler.GetObjectsFromDictionary("Chip_Mini").ToList();
-            container.GetComponent<ChipContainer>().SubscribeMembers(_chipMiniObjects);
-        }
-
-        private void FillMiniChipValues()
-        {
-            int i = 0;
-            foreach (var _chipMiniObject in _chipMiniObjects)
-            {
-                ChipMini component = _chipMiniObject.GetComponent<ChipMini>();
-                component.Init();
-                //component.Value = _chipObjects[i].GetComponent<Chip>().Value;
-                //component.SetChipMaterial(GetChipMaterial(component.Value));
-                //component.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
-
-                _chipMiniObject.transform.SetParent(player);
-
-                component.DeactivateChip();
-                i++;
-            }
+            
+            container.Init(_objectPooler, _assetManager);
         }
 
         private void CreateChips()
         {
             _objectPooler.CreatePool(
-                NameFields.DEFAULT_CHIP_POOL_TAG,
-                _assetManager.GetPrefabObject(NameFields.DEFAULT_CHIP_POOL_TAG),
+                NameFields.DEFAULT_CHIP_NAME,
+                _assetManager.GetPrefabObject(NameFields.DEFAULT_CHIP_NAME),
                 GameConfig.DEFAULT_CHIP_POOL_SIZE);
 
-            _objectPooler.SpawnObjectsWithTag(NameFields.DEFAULT_CHIP_POOL_TAG);
+            _objectPooler.SpawnObjectsWithTag(NameFields.DEFAULT_CHIP_NAME);
 
-            _chipObjects = _objectPooler.GetObjectsFromDictionary(NameFields.DEFAULT_CHIP_POOL_TAG).ToList();
+            _chipObjects = _objectPooler.GetObjectsFromDictionary(NameFields.DEFAULT_CHIP_NAME).ToList();
         }
 
         public void FillChipValues()
@@ -196,8 +133,18 @@ namespace Game.ChipSystem.Managers
                     1.2f,
                     Random.Range(firstPos.z, zMax));
 
-                _objectPooler.SpawnFromPool(NameFields.DEFAULT_CHIP_POOL_TAG, newPos);
+                _objectPooler.SpawnFromPool(NameFields.DEFAULT_CHIP_NAME, newPos);
             }
+        }
+
+        public void AddChip(int value)
+        {
+            container.ChipAddition(value);
+        }
+
+        public void SubtractChip(int value)
+        {
+            container.ChipSubtraction(value);
         }
 
         private int GetRandomValue()

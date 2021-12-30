@@ -13,8 +13,8 @@
 
         #region Pool Tags
 
-        public static string DEFAULT_CHIP_POOL_TAG = "Chip";
-        public static string DEFAULT_MINI_CHIP_POOL_TAG = "Chip_Mini";
+        public static string DEFAULT_CHIP_NAME = "Chip";
+        public static string DEFAULT_CONTAINED_CHIP_NAME = "Chip_Contained";
 
         #endregion
 

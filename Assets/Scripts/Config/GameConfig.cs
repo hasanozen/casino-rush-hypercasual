@@ -19,7 +19,7 @@ namespace Config
             [NameFields.MATERIAL_CHIP_BLACK] = CHIP_VALUES[3]
         };
 
-        public static int DEFAULT_CHIP_POOL_SIZE = 100;
+        public static int DEFAULT_CHIP_POOL_SIZE = 50;
         public static int DEFAULT_MINI_CHIP_POOL_SIZE = 300;
 
         public static int CHIP_STACK_MAX_Z = 3;

@@ -1,178 +1,208 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Config;
 using Game.ChipSystem.Events;
+using Game.LevelSystem.Managers;
 using Game.PoolingSystem;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Zenject;
+using Random = UnityEngine.Random;
 
 namespace Game.ChipSystem.Base
 {
     public class ChipContainer : MonoBehaviour
     {
         private ObjectPooler _objectPooler;
-
-        #region Positioning Variables
-
-        private int _row = 3;
-        private int _column = 3;
-
-        private int _currentRow = 0;
-        private int _currentColumn = 0;
-
-        private Vector3 _startPos;
-        private Vector3 _currentPos;
-
-        private float _increaseAmount;
-
-        #endregion
-
+        private AssetManager _assetManager;
 
         private bool _active;
-        private List<GameObject> _chips;
+        private List<ChipContained> _chips;
 
-        private int zAxisMax;
-        private Vector3 miniChipPos;
+        private int totalValue;
+        public int TotalValue
+        {
+            get => totalValue;
+            set => totalValue = value;
+        }
 
-        public void Init(ObjectPooler objectPooler)
+        private float _containedChipScaleAxisY;
+
+        public void Init(ObjectPooler objectPooler, AssetManager assetManager)
         {
             _objectPooler = objectPooler;
-            _chips = new List<GameObject>();
-
-            zAxisMax = GameConfig.CHIP_STACK_MAX_Z;
+            _assetManager = assetManager;
             
-            SetPositioningVariables();
+            _chips = new List<ChipContained>();
+            _containedChipScaleAxisY = .6f;
         }
-
-        private void SetPositioningVariables()
+        
+        public void ChipAddition(int value)
         {
-            _startPos = _currentPos = new Vector3(
-                -(transform.localScale.x / 2 - 0.17f),
-                transform.position.y + .08f,
-                (transform.localScale.z / _column) - transform.localScale.z);
-
-            _increaseAmount = transform.localScale.x / _row;
-        }
-
-        public void DisconnectFromStack(int amount)
-        {
-            for (int i = _chips.Count; i > _chips.Count - amount; i--)
+            if (_chips.Count < 1)
             {
-                UnsubscribeMember(_chips[i]);
+                if (value <= GameConfig.CHIP_VALUES.Max())
+                {
+                    CreateChip(value);
+                    return;
+                }
+                else
+                    AddMultipleChips(value);
+            }
+
+            ChipContained lastContainedChip = _chips.LastOrDefault();
+            
+            if (lastContainedChip.Value < GameConfig.CHIP_VALUES.Max())
+                value = CompleteLastChip(value, lastContainedChip);
+            
+            AddMultipleChips(value);
+        }
+
+        public void ChipSubtraction(int value)
+        {
+            if (_chips.Count < 1)
+                return;
+
+            //Check if value to subtract greater than current total value
+            value = value > TotalValue ? TotalValue : value;
+            
+            //Subtract last chip
+            ChipContained lastChip = _chips.LastOrDefault();
+            value -= lastChip.Value;
+            RemoveChip(lastChip);
+
+            if (value <= 0)
+                return;
+            
+            //Subtract other chips
+            Dictionary<int, int> existingValues = FindExistingValues(GameConfig.CHIP_VALUES, value);
+
+            foreach (var keyValuePair in existingValues)
+            {
+                if (keyValuePair.Key == GameConfig.CHIP_VALUES.Max())
+                {
+                    for (int i = 0; i < keyValuePair.Value; i++)
+                    {
+                        lastChip = _chips.LastOrDefault();
+                        value -= lastChip.Value;
+                        RemoveChip(lastChip);
+                    }
+                }
+
+                if (value <= 0)
+                    return;
+                
+                //Set the chip on top
+                lastChip = _chips.LastOrDefault();
+                UpdateChipValues(lastChip, value);
             }
         }
 
-        public void CalculateTotalChipAmount()
+        public void ChipMultiplication(int value)
         {
-            int sum = _chips.Where(x => x.GetComponent<ChipMini>().Active)
-                .Sum(x => x.GetComponent<ChipMini>().Value);
+            int currentTotalChipValue = GetTotalChipValues();
+            int valueToAdd = (currentTotalChipValue * value) - currentTotalChipValue;
+
+            if (valueToAdd <= 0)
+                return;
             
+            ChipAddition(valueToAdd);
         }
 
-        public void SubscribeMember(GameObject chip)
+        public void ChipDivision(int value)
         {
-            _chips.Add(chip);
-            ReplaceChip();
-        }
-
-        public void SubscribeMembers(List<GameObject> chips)
-        {
-            _chips.AddRange(chips);
-            ReplaceChips(_chips.Count);
+            if (value == 1)
+                return;
             
-            CalculateTotalChipAmount();
+            //Calculate the value for subtraction that needs to be multiplier of min chip value
+            int currentTotalValue = GetTotalChipValues(); 
+            int valueWillBeLeft, valueToSubtract, complementToDivision;
+
+            valueWillBeLeft = currentTotalValue / value;
+            valueToSubtract = currentTotalValue - valueWillBeLeft;
+            complementToDivision = valueToSubtract % GameConfig.CHIP_VALUES.Min();
+
+            valueWillBeLeft += complementToDivision;
+            valueToSubtract = currentTotalValue - valueWillBeLeft;
+
+            if (valueToSubtract <= 0)
+                return;
+            
+            ChipSubtraction(valueToSubtract);
         }
 
-        public void UnsubscribeMember(GameObject chip)
+        private void AddMultipleChips(int value)
         {
-            chip.GetComponent<ChipMini>().GetEventManager().InvokeEvent(ChipEventType.ON_DESTACKED);
+            Dictionary<int, int> existingValues = FindExistingValues(GameConfig.CHIP_VALUES, value);
+
+            foreach (var keyValuePair in existingValues)
+                for (int i = 0; i < keyValuePair.Value; i++)
+                    CreateChip(keyValuePair.Key);
+        }
+        
+        private void CreateChip(int value)
+        {
+            var objectToSpawn = _assetManager.GetPrefabObject(NameFields.DEFAULT_CONTAINED_CHIP_NAME);
+            ChipContained contained = Instantiate(objectToSpawn).GetComponent<ChipContained>();
+            
+            _chips.Add(contained);
+            contained.transform.SetParent(transform);
+            
+            contained.Init();
+            contained.Value = value;
+            contained.SetChipMaterial(GetChipMaterial(value));
+            contained.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
+            contained.GetEventManager().InvokeEvent(ChipEventType.ON_STACKED);
+            
+            UpdateTotalChipValues();
+            SetChipPosition(contained);
+        }
+
+        private void RemoveChip(ChipContained chip)
+        {
+            chip.GetEventManager().InvokeEvent(ChipEventType.ON_DESTACKED);
             _chips.Remove(chip);
             
-            CalculateTotalChipAmount();
+            UpdateTotalChipValues();
         }
 
-        public void ActivateChips(int amount)
+        private int CompleteLastChip(int value, ChipContained lastContainedChip)
         {
-            int index = _chips.IndexOf(_chips.FirstOrDefault(x => x.GetComponent<ChipBase>().Active == false));
+            int maxChipValue = GameConfig.CHIP_VALUES.Max();
+            int valueToCompleteLastChip =  maxChipValue - lastContainedChip.Value;
+            UpdateChipValues(lastContainedChip, maxChipValue);
+            value -= valueToCompleteLastChip;
+            return value;
+        }
 
-            for (int i = index; i < index + amount; i++)
-            {
-                _chips[i].GetComponent<ChipMini>().ActivateChip();
-                _chips[i].GetComponent<ChipMini>().GetEventManager().InvokeEvent(ChipEventType.ON_STACKED);
-                
-            }
+        private void UpdateChipValues(ChipContained chip, int value)
+        {
+            chip.Value = value;
+            chip.SetChipMaterial(GetChipMaterial(value));
+            chip.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
             
-            CalculateTotalChipAmount();
+            UpdateTotalChipValues();
+        }
+        
+        private void SetChipPosition(ChipContained chip)
+        {
+            chip.transform.localPosition = new Vector3(
+                0,
+                transform.localScale.y + _containedChipScaleAxisY * _chips.Count,
+                0);
         }
 
-        public void DeactivateChips(int amount)
+        private void UpdateTotalChipValues()
         {
-            int index = FindLastActiveChipIndex();
-
-            for (int i = index; i > index - amount; i--)
-            {
-                _chips[i].GetComponent<ChipMini>().GetEventManager().InvokeEvent(ChipEventType.ON_DESTACKED);
-                
-            }
+            TotalValue = GetTotalChipValues();
             
-            CalculateTotalChipAmount();
+            Debug.Log("Total Value: " + TotalValue);
         }
 
-        private int FindLastActiveChipIndex()
+        private int GetTotalChipValues()
         {
-            return _chips.IndexOf(_chips.FirstOrDefault(x => x.GetComponent<ChipBase>().Active == false)) - 1;
-        }
-
-        public void DeactivateChipsByValue(int value)
-        {
-            int index = FindLastActiveChipIndex();
-            
-            //TODO: here
-        }
-
-        public void ReplaceChip()
-        {
-            var tmpObject = _objectPooler.SpawnFromPool(NameFields.DEFAULT_MINI_CHIP_POOL_TAG, _currentPos);
-            tmpObject.GetComponent<ChipMini>().stackLocation = _currentPos;
-            _currentPos = new Vector3(_currentPos.x + _increaseAmount, _currentPos.y, _currentPos.z);
-            _currentRow++;
-
-            if (_currentRow == _row)
-            {
-                _currentRow = 0;
-                _currentPos = new Vector3(_startPos.x, _currentPos.y, _currentPos.z - _increaseAmount);
-                _currentColumn++;
-            }
-
-            if (_currentColumn == _column)
-            {
-                _currentColumn = 0;
-                _currentPos = new Vector3(_startPos.x, _currentPos.y + .05f, _startPos.z);
-            }
-        }
-
-        public void ReplaceChips(int amount)
-        {
-            for (int i = 0; i < amount; i++)
-            {
-                var tmpObject = _objectPooler.SpawnFromPool(NameFields.DEFAULT_MINI_CHIP_POOL_TAG, _currentPos);
-                tmpObject.GetComponent<ChipMini>().stackLocation = _currentPos;
-                _currentPos = new Vector3(_currentPos.x + _increaseAmount, _currentPos.y, _currentPos.z);
-                _currentRow++;
-
-                if (_currentRow == _row)
-                {
-                    _currentRow = 0;
-                    _currentPos = new Vector3(_startPos.x, _currentPos.y, _currentPos.z - _increaseAmount);
-                    _currentColumn++;
-                }
-
-                if (_currentColumn == 3)
-                {
-                    _currentColumn = 0;
-                    _currentPos = new Vector3(_startPos.x, _currentPos.y + .05f, _startPos.z);
-                }
-            }
+            return _chips.Sum(x => x.Value);
         }
 
         public void ActivateContainer()
@@ -184,15 +214,46 @@ namespace Game.ChipSystem.Base
         {
             _active = false;
         }
-
-        public int GetRow()
+        
+        private Material GetChipMaterial(int Value)
         {
-            return _row;
+            string key = GameConfig.CHIP_FEATURES
+                .FirstOrDefault(x => x.Value == Value)
+                .Key;
+
+            return _assetManager.GetChipMaterial(key);
         }
-
-        public void SetRow(int row)
+        
+        private int GetRandomValue()
         {
-            _row = row;
+            return GameConfig.CHIP_VALUES[Random.Range(0, GameConfig.CHIP_VALUES.Length)];
+        }
+        
+        private Dictionary<int, int> FindExistingValues(int[] searchingValues, int value)
+        {
+            Array.Sort(searchingValues);
+            Array.Reverse(searchingValues);
+            
+            int remaining = value;
+
+            Dictionary<int, int> counts = new Dictionary<int, int>();
+
+            for (int i = 0; i < searchingValues.Length; i++)
+            {
+                int v = searchingValues[i];
+
+                if (v <= remaining)
+                {
+                    remaining -= v;
+                    if (!counts.ContainsKey(v))
+                        counts[v] = 0;
+
+                    counts[v]++;
+                    i--;
+                }
+            }
+
+            return counts;
         }
     }
 }
