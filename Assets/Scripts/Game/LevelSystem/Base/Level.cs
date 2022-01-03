@@ -4,9 +4,9 @@ namespace Game.LevelSystem.Base
 {
     public enum LevelLength
     {
-        SHORT = 3,
-        MEDIUM = 7,
-        LONG = 10
+        SHORT = 8,
+        MEDIUM = 11,
+        LONG = 15
     }
 
     public enum LevelDifficulty

@@ -13,12 +13,14 @@ namespace Installers
         [SerializeField] private CharacterBase mainCharacter;
         [SerializeField] private ObjectPooler objectPooler;
         [SerializeField] private ChipManager chipManager;
+        [SerializeField] private LevelGenerator levelGenerator;
 
         public override void InstallBindings()
         {
             Container.BindInstance(mainCharacter).AsSingle().NonLazy();
             Container.BindInstance(objectPooler).AsSingle().NonLazy();
             Container.BindInstance(chipManager).AsSingle().NonLazy();
+            Container.BindInstance(levelGenerator).AsSingle().NonLazy();
 
             Container.Bind<AssetManager>().AsSingle().NonLazy();
         }

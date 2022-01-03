@@ -26,7 +26,7 @@ namespace Game.ChipSystem.Managers
         #endregion
 
         private List<GameObject> _chipObjects;
-        private List<GameObject> _chipMiniObjects;
+        //private List<GameObject> _chipMiniObjects;
         private ChipContainer container;
         private Transform player;
         public Material tempMat;
@@ -45,9 +45,9 @@ namespace Game.ChipSystem.Managers
 
         public void Init()
         {
-            _gateController = new GateController();
-            _gateController.Init(_assetManager, _objectPooler);
-            _gateController.InitializeGates();
+            // _gateController = new GateController();
+            // _gateController.Init(_assetManager, _objectPooler);
+            // _gateController.InitializeGates();
 
             _objectPooler.Init();
             _chipObjects = new List<GameObject>();
@@ -58,6 +58,19 @@ namespace Game.ChipSystem.Managers
             CreateChips();
             FillChipValues();
             ReplaceChips();
+        }
+
+        public void DeactivateChips()
+        {
+            _objectPooler.DeactivatePool(NameFields.DEFAULT_CHIP_NAME);
+        }
+
+        public void RefreshChips()
+        {
+            FillChipValues();
+            ReplaceChips();
+            
+            container.RefreshContainer();
         }
 
         public void ProcessGate(EffectType effectType, int value)
@@ -115,6 +128,8 @@ namespace Game.ChipSystem.Managers
                 Chip component = _chipObject.GetComponent<Chip>();
                 component.Init();
                 component.Value = GetRandomValue();
+                
+                Debug.Log("Chip Value: " + component.Value);
                 component.SetChipMaterial(GetChipMaterial(component.Value));
                 component.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
             }
@@ -123,7 +138,9 @@ namespace Game.ChipSystem.Managers
         private void ReplaceChips()
         {
             float xMax = 2f;
-            float zMax = GameObject.Find("TempPath").GetComponent<Transform>().localScale.z;
+            Transform[] platforms = GameObject.FindGameObjectsWithTag("Path").Select(x => x.GetComponent<Transform>()).ToArray();
+            //float zMax = GameObject.Find("Path").GetComponent<Transform>().localScale.z;
+            float zMax = platforms.Max(x => x.position.z);
 
             Vector3 firstPos = _chipObjects[0].transform.position;
             foreach (var chip in _chipObjects)
@@ -149,7 +166,7 @@ namespace Game.ChipSystem.Managers
 
         private int GetRandomValue()
         {
-            return GameConfig.CHIP_VALUES[Random.Range(0, GameConfig.CHIP_VALUES.Length)];
+            return GameConfig.PLATFORM_CHIP_VALUES[Random.Range(0, GameConfig.PLATFORM_CHIP_VALUES.Length)];
         }
 
         public List<GameObject> GetChipObjects()

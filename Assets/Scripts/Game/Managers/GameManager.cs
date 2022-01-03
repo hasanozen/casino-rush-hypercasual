@@ -12,13 +12,15 @@ namespace Game.Managers
         private CharacterBase _mainCharacter;
         private ChipManager _chipManager;
         private ObjectPooler _objectPooler;
+        private LevelGenerator _levelGenerator;
 
         [Inject]
-        private void OnInitialize(CharacterBase characterBase, ChipManager chipManager, ObjectPooler objectPooler)
+        private void OnInitialize(CharacterBase characterBase, ChipManager chipManager, ObjectPooler objectPooler, LevelGenerator levelGenerator)
         {
             _mainCharacter = characterBase;
             _chipManager = chipManager;
             _objectPooler = objectPooler;
+            _levelGenerator = levelGenerator;
         }
 
         private void Start()
@@ -30,7 +32,7 @@ namespace Game.Managers
         {
             _mainCharacter.Init();
             _objectPooler.Init();
-            _chipManager.Init();
+            _levelGenerator.Init();
         }
     }
 }

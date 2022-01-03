@@ -100,7 +100,7 @@ namespace Game.PoolingSystem
 
             foreach (var obj in poolDictionary[tag])
             {
-                obj.SetActive(true);
+                obj.SetActive(false);
                 obj.transform.position = Vector3.zero;
                 obj.transform.rotation = Quaternion.identity;
             }

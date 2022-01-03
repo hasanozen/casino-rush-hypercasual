@@ -24,12 +24,14 @@ namespace Game.ChipSystem.Base
         
         private void OnDestacked()
         {
+            float animDuration = .5f;
+            Vector3 mainScale = transform.localScale;
             transform.parent = null;
 
             Vector3 randomPosition = new Vector3(
-                Random.Range(transform.position.x - 2, transform.position.x + 2),
-                Random.Range(5, 10), 
-                Random.Range(transform.position.z - 1, transform.position.z - 10));
+                Random.Range(transform.position.x - 5, transform.position.x + 5),
+                transform.position.y, 
+                transform.position.z);
 
             Vector3 randomRotation = new Vector3(
                 Random.Range(0, 360),
@@ -37,10 +39,12 @@ namespace Game.ChipSystem.Base
                 Random.Range(0, 360)
             );
             
-            transform.DORotate(randomRotation, .3f);
-            transform.DOMove(randomPosition, .3f).OnComplete(() =>
+            transform.DORotate(randomRotation, animDuration);
+            transform.DOScale(new Vector3(0, 0, 0), animDuration);
+            transform.DOMove(randomPosition, animDuration).OnComplete(() =>
             {
                 DeactivateChip();
+                transform.localScale = mainScale;
             });
         }
 

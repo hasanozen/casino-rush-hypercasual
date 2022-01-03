@@ -8,6 +8,12 @@
         public static string MATERIAL_CHIP_BLUE = "Chip_Blue";
         public static string MATERIAL_CHIP_GREEN = "Chip_Green";
         public static string MATERIAL_CHIP_BLACK = "Chip_Black";
+        public static string MATERIAL_CHIP_PINK = "Chip_Pink";
+        public static string MATERIAL_CHIP_PURPLE = "Chip_Purple";
+        public static string MATERIAL_CHIP_GRAY = "Chip_Gray";
+        public static string MATERIAL_CHIP_BROWN = "Chip_Brown";
+        public static string MATERIAL_CHIP_WHITE = "Chip_White";
+        public static string MATERIAL_CHIP_YELLOW = "Chip_Yellow";
 
         #endregion
 

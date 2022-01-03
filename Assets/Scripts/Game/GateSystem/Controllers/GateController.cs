@@ -17,7 +17,7 @@ namespace Game.GateSystem.Controllers
         
         private List<GateBase> _gates;
 
-        private int _positiveGateCount = 5, _negativeGateCount = 5;
+        private int _positiveGateCount = 4, _negativeGateCount = 4;
         
         public void Init(AssetManager assetManager, ObjectPooler objectPooler)
         {
@@ -46,6 +46,22 @@ namespace Game.GateSystem.Controllers
 
             _gates.Shuffle();
             SetGatePosition();
+        }
+
+        public void DeactivateGates()
+        {
+            foreach (var gate in _gates)
+            {
+                gate.Deactivate();
+            }
+        }
+        
+        public void RefreshGates()
+        {
+            foreach (var gate in _gates)
+            {
+                CreateGate(gate, gate.GateType);
+            }
         }
 
         public void SetGatePosition()
@@ -129,6 +145,7 @@ namespace Game.GateSystem.Controllers
             string text = sign + "$" + value;
             
             gate.SetGateValues(value, color, img, text);
+            gate.Activate();
         }
     }
 }

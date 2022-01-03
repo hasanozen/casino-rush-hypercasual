@@ -23,8 +23,8 @@ namespace Game.GateSystem.Base
         private List<MeshRenderer> _gateBorders;
         private SpriteRenderer _background, _image;
         private TextMeshPro _text;
-        
-        public GateType GateType { get; }
+
+        public GateType GateType;
         public EffectType EffectType;
 
         public int EffectValue;
@@ -32,6 +32,7 @@ namespace Game.GateSystem.Base
         public virtual void Init(GateType gateType, EffectType effectType)
         {
             EffectType = effectType;
+            GateType = gateType;
             
             GetBorders();
             GetMiddleObjects();

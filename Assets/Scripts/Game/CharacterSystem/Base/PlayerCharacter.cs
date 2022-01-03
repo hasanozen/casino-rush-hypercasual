@@ -41,6 +41,12 @@ namespace Game.CharacterSystem.Base
 
             GetEventManager().SubscribeEvent(CharacterEventType.ON_START,
                 () => { Timer.Instance.TimerWait(1f, () => _characterInputController.ActivateController()); });
+            
+            GetEventManager().SubscribeEvent(CharacterEventType.ON_FINISH, () =>
+            {
+                _characterInputController.DeactivateController();
+                GetEventManager().InvokeEvent(CharacterEventType.ON_START);
+            });
         }
 
         private void SubscribeControllerEvents()
@@ -69,6 +75,12 @@ namespace Game.CharacterSystem.Base
                 GateBase gate = other.GetComponent<GateBase>();
                 _chipManager.ProcessGate(gate.EffectType, gate.EffectValue);
             }
+
+            if (other.CompareTag("Finish"))
+            {
+                Debug.Log("Finish");
+                CharacterEventManager.InvokeEvent(CharacterEventType.ON_FINISH);
+            }
         }
 
         #region Camera
@@ -78,7 +90,9 @@ namespace Game.CharacterSystem.Base
             if (_characterCamera == null)
                 return;
 
-            _characterCamera.transform.position = transform.position + _cameraOffset;
+            Vector3 newPos = new Vector3(_characterCamera.transform.position.x, transform.position.y,
+                transform.position.z);
+            _characterCamera.transform.position = newPos + _cameraOffset;
         }
 
         #endregion

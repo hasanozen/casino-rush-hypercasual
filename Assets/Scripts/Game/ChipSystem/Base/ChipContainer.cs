@@ -5,6 +5,7 @@ using Config;
 using Game.ChipSystem.Events;
 using Game.LevelSystem.Managers;
 using Game.PoolingSystem;
+using NUnit.Framework;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Zenject;
@@ -19,6 +20,7 @@ namespace Game.ChipSystem.Base
 
         private bool _active;
         private List<ChipContained> _chips;
+        private List<ChipContained> _deactivatedChips;
 
         private int totalValue;
         public int TotalValue
@@ -35,7 +37,24 @@ namespace Game.ChipSystem.Base
             _assetManager = assetManager;
             
             _chips = new List<ChipContained>();
+            _deactivatedChips = new List<ChipContained>();
             _containedChipScaleAxisY = .6f;
+        }
+
+        public void RefreshContainer()
+        {
+            for (int i = 0; i < _deactivatedChips.Count; i++)
+            {
+                Destroy(_deactivatedChips[i].gameObject);
+            }
+
+            for (int i = 0; i < _chips.Count; i++)
+            {
+                Destroy(_chips[i].gameObject);
+            }
+            
+            _deactivatedChips.Clear();
+            _chips.Clear();
         }
         
         public void ChipAddition(int value)
@@ -47,12 +66,12 @@ namespace Game.ChipSystem.Base
                     CreateChip(value);
                     return;
                 }
-                else
-                    AddMultipleChips(value);
+                
+                AddMultipleChips(value);
             }
 
             ChipContained lastContainedChip = _chips.LastOrDefault();
-            
+
             if (lastContainedChip.Value < GameConfig.CHIP_VALUES.Max())
                 value = CompleteLastChip(value, lastContainedChip);
             
@@ -134,6 +153,9 @@ namespace Game.ChipSystem.Base
 
         private void AddMultipleChips(int value)
         {
+            if (value <= 0)
+                return;
+            
             Dictionary<int, int> existingValues = FindExistingValues(GameConfig.CHIP_VALUES, value);
 
             foreach (var keyValuePair in existingValues)
@@ -163,6 +185,7 @@ namespace Game.ChipSystem.Base
         {
             chip.GetEventManager().InvokeEvent(ChipEventType.ON_DESTACKED);
             _chips.Remove(chip);
+            _deactivatedChips.Add(chip);
             
             UpdateTotalChipValues();
         }
@@ -170,9 +193,14 @@ namespace Game.ChipSystem.Base
         private int CompleteLastChip(int value, ChipContained lastContainedChip)
         {
             int maxChipValue = GameConfig.CHIP_VALUES.Max();
-            int valueToCompleteLastChip =  maxChipValue - lastContainedChip.Value;
-            UpdateChipValues(lastContainedChip, maxChipValue);
+
+            int valueToCompleteLastChip = lastContainedChip.Value + value > maxChipValue 
+                ? maxChipValue - lastContainedChip.Value 
+                : value;
+
+            UpdateChipValues(lastContainedChip, lastContainedChip.Value + valueToCompleteLastChip);
             value -= valueToCompleteLastChip;
+
             return value;
         }
 
@@ -187,10 +215,11 @@ namespace Game.ChipSystem.Base
         
         private void SetChipPosition(ChipContained chip)
         {
-            chip.transform.localPosition = new Vector3(
-                0,
-                transform.localScale.y + _containedChipScaleAxisY * _chips.Count,
-                0);
+            float posX = 0;
+            float posY = transform.localScale.y + _containedChipScaleAxisY * _chips.Count;
+            float posZ = 0;
+            
+            chip.transform.localPosition = new Vector3(posX, posY, posZ);
         }
 
         private void UpdateTotalChipValues()
