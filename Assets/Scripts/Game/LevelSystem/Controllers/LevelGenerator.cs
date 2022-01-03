@@ -31,6 +31,7 @@ public class LevelGenerator : MonoBehaviour
 
     private List<GameObject> _platforms;
     private List<GameObject> _finish;
+    private List<GameObject> _endGames;
 
     [Inject]
     private void OnInitialize(ObjectPooler objectPooler, AssetManager assetManager, ChipManager chipManager, CharacterBase characterBase)
@@ -46,6 +47,7 @@ public class LevelGenerator : MonoBehaviour
 
         _platforms = new List<GameObject>();
         _finish = new List<GameObject>();
+        _endGames = new List<GameObject>();
     }
 
     public void Init()
@@ -53,9 +55,7 @@ public class LevelGenerator : MonoBehaviour
         _gateController = new GateController();
         _gateController.Init(_assetManager, _objectPooler);
         _gateController.InitializeGates();
-        
-        
-        
+
         _mainCharacter.GetEventManager().SubscribeEvent(CharacterEventType.ON_FINISH, GeneratePlatforms);
         _mainCharacter.GetEventManager().SubscribeEvent(CharacterEventType.ON_FINISH, GenerateChips);
         _mainCharacter.GetEventManager().SubscribeEvent(CharacterEventType.ON_FINISH, GenerateGates);
@@ -91,6 +91,13 @@ public class LevelGenerator : MonoBehaviour
         
         _objectPooler.SpawnObjectsWithTag("Finish");
         _finish = _objectPooler.GetObjectsFromDictionary("Finish").ToList();
+        
+        _objectPooler.CreatePool("EndGame_HorseRace",
+            _assetManager.GetPrefabObject("HorseRacePlatform"),
+            1);
+        
+        _objectPooler.SpawnObjectsWithTag("EndGame_HorseRace");
+        _endGames = _objectPooler.GetObjectsFromDictionary("EndGame_HorseRace").ToList();
     }
 
     private void GeneratePlatforms()
@@ -117,6 +124,10 @@ public class LevelGenerator : MonoBehaviour
         }
 
         platform = _finish[0];
+        platform.SetActive(true);
+        UpdateObjectPosition(platform.transform, ref lastPosition, ref increaseAmount);
+
+        platform = _endGames[0];
         platform.SetActive(true);
         UpdateObjectPosition(platform.transform, ref lastPosition, ref increaseAmount);
         
