@@ -19,6 +19,7 @@ namespace Game.CharacterSystem.Base
         #region Controllers
 
         protected CharacterMovementController CharacterMovementController;
+        protected CharacterAnimatorController CharacterAnimatorController;
 
         #endregion
 
@@ -27,9 +28,12 @@ namespace Game.CharacterSystem.Base
             PlayerHealth = GameConfig.CHARACTER_DEFAULT_HEALTH;
 
             var mainRigidbody = GetComponent<Rigidbody>();
+            var animator = transform.Find("WomenModel").GetComponent<Animator>();
 
             CharacterEventManager = new CharacterEventManager();
             CharacterMovementController = gameObject.AddComponent<CharacterMovementController>();
+
+            CharacterAnimatorController = new CharacterAnimatorController(animator);
             
             CharacterMovementController.Init(transform, GameConfig.CHARACTER_FORWARD_SPEED, GameConfig.CHARACTER_SWIPE_SPEED);
 
@@ -53,29 +57,24 @@ namespace Game.CharacterSystem.Base
 
         private void OnStart()
         {
-            Debug.Log("OnStart method called");
             PlayerHealth = GameConfig.CHARACTER_DEFAULT_HEALTH;
         }
         
         private void OnFinish()
         {
-            //TODO: Finishing process
-            Debug.Log("OnFinish method called");
+            CharacterAnimatorController.PerformIdleAnimation();
         }
         
         private void OnDeath()
         {
-            //TODO: Dying process
-            Debug.Log("OnDeath method called");
+            CharacterAnimatorController.Deactivate();
         }
         
         private void OnRestart()
         {
-            //TODO: Restart process
-            Debug.Log("OnRestart method called");
-            
             Timer.Instance.TimerWait(1f, () =>
             {
+                CharacterAnimatorController.Activate();
                 if (PlayerHealth < 1)
                 {
                     CharacterEventManager.InvokeEvent(CharacterEventType.ON_RESTART);

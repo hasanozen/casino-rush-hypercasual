@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Config;
+using Data;
 using Game.ChipSystem.Events;
 using Game.LevelSystem.Managers;
 using Game.PoolingSystem;
@@ -17,6 +18,7 @@ namespace Game.ChipSystem.Base
     {
         private ObjectPooler _objectPooler;
         private AssetManager _assetManager;
+        private LevelData _levelData;
 
         private bool _active;
         private List<ChipContained> _chips;
@@ -31,18 +33,27 @@ namespace Game.ChipSystem.Base
 
         private float _containedChipScaleAxisY;
 
-        public void Init(ObjectPooler objectPooler, AssetManager assetManager)
+        public void Init(ObjectPooler objectPooler, AssetManager assetManager, LevelData levelData)
         {
             _objectPooler = objectPooler;
             _assetManager = assetManager;
+            _levelData = levelData;
             
             _chips = new List<ChipContained>();
             _deactivatedChips = new List<ChipContained>();
-            _containedChipScaleAxisY = .6f;
+            //_containedChipScaleAxisY = .6f;
+            _containedChipScaleAxisY = .3f;
+        }
+
+        public void SetLevelBalance()
+        {
+            Debug.Log("SetLevelBalance");
+            _levelData.SetBalance(GetTotalChipValues());
         }
 
         public void RefreshContainer()
         {
+            Debug.Log("Refresh Container");
             for (int i = 0; i < _deactivatedChips.Count; i++)
             {
                 Destroy(_deactivatedChips[i].gameObject);
@@ -225,8 +236,6 @@ namespace Game.ChipSystem.Base
         private void UpdateTotalChipValues()
         {
             TotalValue = GetTotalChipValues();
-            
-            Debug.Log("Total Value: " + TotalValue);
         }
 
         private int GetTotalChipValues()

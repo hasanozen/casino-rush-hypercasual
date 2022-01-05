@@ -15,7 +15,8 @@ namespace Game.CharacterSystem.Events
                 new CharacterEvent(CharacterEventType.ON_DEATH),
                 new CharacterEvent(CharacterEventType.ON_START),
                 new CharacterEvent(CharacterEventType.ON_FINISH),
-                new CharacterEvent(CharacterEventType.ON_RESTART)
+                new CharacterEvent(CharacterEventType.ON_RESTART),
+                new CharacterEvent(CharacterEventType.ON_END_GAME)
             };
         }
 

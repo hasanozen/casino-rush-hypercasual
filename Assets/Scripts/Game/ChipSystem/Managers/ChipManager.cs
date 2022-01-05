@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Config;
+using Data;
 using Game.CharacterSystem.Base;
+using Game.CharacterSystem.Events;
 using Game.ChipSystem.Base;
 using Game.ChipSystem.Events;
 using Game.GateSystem.Base;
@@ -23,6 +25,8 @@ namespace Game.ChipSystem.Managers
         private AssetManager _assetManager;
         private ObjectPooler _objectPooler;
 
+        private LevelData _levelData;
+
         #endregion
 
         private List<GameObject> _chipObjects;
@@ -37,21 +41,23 @@ namespace Game.ChipSystem.Managers
         private GateController _gateController;
 
         [Inject]
-        private void OnInitialize(AssetManager assetManager, ObjectPooler objectPooler)
+        private void OnInitialize(AssetManager assetManager, ObjectPooler objectPooler, LevelData levelData)
         {
             _assetManager = assetManager;
             _objectPooler = objectPooler;
+            _levelData = levelData;
         }
 
         public void Init()
         {
-            // _gateController = new GateController();
-            // _gateController.Init(_assetManager, _objectPooler);
-            // _gateController.InitializeGates();
-
             _objectPooler.Init();
             _chipObjects = new List<GameObject>();
             player = FindObjectOfType<PlayerCharacter>().transform;
+            
+            // player
+            //     .GetComponent<PlayerCharacter>()
+            //     .GetEventManager()
+            //     .SubscribeEvent(CharacterEventType.ON_END_GAME, SetLevelBalance);
 
             CreateContainer();
 
@@ -63,6 +69,11 @@ namespace Game.ChipSystem.Managers
         public void DeactivateChips()
         {
             _objectPooler.DeactivatePool(NameFields.DEFAULT_CHIP_NAME);
+        }
+
+        public void SetLevelBalance()
+        {
+            container.SetLevelBalance();
         }
 
         public void RefreshChips()
@@ -98,15 +109,16 @@ namespace Game.ChipSystem.Managers
         private void CreateContainer()
         {
             var player = FindObjectOfType<PlayerCharacter>().transform;
+            player = player.Find("WomenModel");
             container = Instantiate(_assetManager.GetPrefabObject("Container"), player).AddComponent<ChipContainer>();
 
             container.transform.position = new Vector3(
                 player.position.x,
                 player.localScale.y,
-                player.position.z - player.localScale.z
+                -.5f/*player.position.z - player.localScale.z*/
             );
             
-            container.Init(_objectPooler, _assetManager);
+            container.Init(_objectPooler, _assetManager, _levelData);
         }
 
         private void CreateChips()
@@ -128,8 +140,6 @@ namespace Game.ChipSystem.Managers
                 Chip component = _chipObject.GetComponent<Chip>();
                 component.Init();
                 component.Value = GetRandomValue();
-                
-                Debug.Log("Chip Value: " + component.Value);
                 component.SetChipMaterial(GetChipMaterial(component.Value));
                 component.GetEventManager().InvokeEvent(ChipEventType.ON_VALUE_CHANGE);
             }
@@ -138,11 +148,11 @@ namespace Game.ChipSystem.Managers
         private void ReplaceChips()
         {
             float xMax = 2f;
-            Transform[] platforms = GameObject.FindGameObjectsWithTag("Path").Select(x => x.GetComponent<Transform>()).ToArray();
-            //float zMax = GameObject.Find("Path").GetComponent<Transform>().localScale.z;
+            Transform[] platforms = GameObject.FindGameObjectsWithTag("Path").Select(x => x.GetComponent<Transform>())
+                .ToArray();
             float zMax = platforms.Max(x => x.position.z);
 
-            Vector3 firstPos = _chipObjects[0].transform.position;
+            Vector3 firstPos = new Vector3(0, 0, 5);
             foreach (var chip in _chipObjects)
             {
                 Vector3 newPos = new Vector3(

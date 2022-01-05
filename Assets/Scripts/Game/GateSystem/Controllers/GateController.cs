@@ -62,19 +62,24 @@ namespace Game.GateSystem.Controllers
             {
                 CreateGate(gate, gate.GateType);
             }
+            
+            _gates.Shuffle();
+            SetGatePosition();
         }
 
         public void SetGatePosition()
         {
             float limitX = 1.5f;
-            float minPoint = 20f;
-            float minDistBetweenGates = 10f;
-            float spectrum = 20f;
-            float maxPoint = 100;
+            float minDistanceBetweenGates = 10f;
+            float maxDistanceBetweenGates = 20f;
+            float currentPoint = 5f;
+            float lastPoint = GameObject.FindGameObjectsWithTag("Path").Select(x => x.GetComponent<Transform>())
+                .Max(x => x.position.z) - currentPoint;
 
             for (int i = 0; i < _gates.Count; i+=2)
             {
-                float zPos = Mathf.Clamp(Random.Range(minPoint, minPoint + spectrum), minPoint, maxPoint);
+                float zPos = Random.Range(minDistanceBetweenGates, maxDistanceBetweenGates) + currentPoint;
+                zPos = Mathf.Clamp(zPos, 0, lastPoint);
                 
                 _gates[i].transform.position =
                     new Vector3(limitX, _gates[i].transform.position.y, zPos);
@@ -85,8 +90,9 @@ namespace Game.GateSystem.Controllers
                 _gates[i].Activate();
                 _gates[i + 1].Activate();
 
-                minPoint += minDistBetweenGates;
+                currentPoint += zPos;
             }
+
         }
 
         private void CreateGate(GateBase gate, GateType gateType)

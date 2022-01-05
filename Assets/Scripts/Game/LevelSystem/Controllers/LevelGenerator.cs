@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Config;
+using Data;
 using Game.CharacterSystem.Base;
 using Game.CharacterSystem.Events;
 using Game.ChipSystem.Managers;
 using Game.GateSystem.Controllers;
 using Game.LevelSystem.Base;
 using Game.LevelSystem.Managers;
+using Game.MiniGames.Base;
 using Game.PoolingSystem;
 using UnityEngine;
 using Utils;
@@ -24,6 +26,7 @@ public class LevelGenerator : MonoBehaviour
     private ObjectPooler _objectPooler;
     private AssetManager _assetManager;
     private ChipManager _chipManager;
+    private LevelData _levelData;
 
     private GateController _gateController;
     
@@ -34,12 +37,13 @@ public class LevelGenerator : MonoBehaviour
     private List<GameObject> _endGames;
 
     [Inject]
-    private void OnInitialize(ObjectPooler objectPooler, AssetManager assetManager, ChipManager chipManager, CharacterBase characterBase)
+    private void OnInitialize(ObjectPooler objectPooler, AssetManager assetManager, ChipManager chipManager, CharacterBase characterBase, LevelData levelData)
     {
         _mainCharacter = characterBase;
         _objectPooler = objectPooler;
         _assetManager = assetManager;
         _chipManager = chipManager;
+        _levelData = levelData;
 
         _startPosition = new Vector3(0, 0, 0);
         _currentLevel = null;
@@ -54,7 +58,6 @@ public class LevelGenerator : MonoBehaviour
     {
         _gateController = new GateController();
         _gateController.Init(_assetManager, _objectPooler);
-        _gateController.InitializeGates();
 
         _mainCharacter.GetEventManager().SubscribeEvent(CharacterEventType.ON_FINISH, GeneratePlatforms);
         _mainCharacter.GetEventManager().SubscribeEvent(CharacterEventType.ON_FINISH, GenerateChips);
@@ -63,8 +66,9 @@ public class LevelGenerator : MonoBehaviour
         GeneratePlatforms();
         
         _chipManager.Init();
-        
         GenerateChips();
+        
+        _gateController.InitializeGates();
         GenerateGates();
     }
 
@@ -72,8 +76,9 @@ public class LevelGenerator : MonoBehaviour
     {
         LevelLength levelLength = GameConfig.GetLevelLength(_counter);
         LevelDifficulty levelDifficulty = GameConfig.GetLevelDifficulty(_counter);
+        LevelGameType levelGameType = GameConfig.GetEndGame();
 
-        _currentLevel = new Level(_counter++, levelLength, levelDifficulty);
+        _currentLevel = new Level(_counter++, levelLength, levelDifficulty, levelGameType);
     }
 
     private void CreatePlatformPool()
@@ -92,12 +97,9 @@ public class LevelGenerator : MonoBehaviour
         _objectPooler.SpawnObjectsWithTag("Finish");
         _finish = _objectPooler.GetObjectsFromDictionary("Finish").ToList();
         
-        _objectPooler.CreatePool("EndGame_HorseRace",
-            _assetManager.GetPrefabObject("HorseRacePlatform"),
-            1);
-        
-        _objectPooler.SpawnObjectsWithTag("EndGame_HorseRace");
-        _endGames = _objectPooler.GetObjectsFromDictionary("EndGame_HorseRace").ToList();
+        //Adding level games
+        _objectPooler.AddLevelGame(_assetManager.GetLevelGame(LevelGameType.HORSE_RACE));
+        _objectPooler.SpawnLevelGames();
     }
 
     private void GeneratePlatforms()
@@ -127,8 +129,9 @@ public class LevelGenerator : MonoBehaviour
         platform.SetActive(true);
         UpdateObjectPosition(platform.transform, ref lastPosition, ref increaseAmount);
 
-        platform = _endGames[0];
-        platform.SetActive(true);
+        platform = _objectPooler.GetLevelGame(_currentLevel.LevelGameType).gameObject;
+        _objectPooler.ActivateLevelGame(platform.GetComponent<LevelGame>().levelGameType);
+        _levelData.SetLevelGame(platform.GetComponent<LevelGame>());
         UpdateObjectPosition(platform.transform, ref lastPosition, ref increaseAmount);
         
         OnLevelGenerated.SafeInvoke(_currentLevel);

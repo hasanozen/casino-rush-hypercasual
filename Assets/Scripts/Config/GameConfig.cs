@@ -19,13 +19,13 @@ namespace Config
             [NameFields.MATERIAL_CHIP_RED] = CHIP_VALUES[0],
             [NameFields.MATERIAL_CHIP_BLUE] = CHIP_VALUES[1],
             [NameFields.MATERIAL_CHIP_GREEN] = CHIP_VALUES[2],
-            [NameFields.MATERIAL_CHIP_BLACK] = CHIP_VALUES[3],
+            [NameFields.MATERIAL_CHIP_PURPLE] = CHIP_VALUES[3],
             [NameFields.MATERIAL_CHIP_PINK] = CHIP_VALUES[4],
-            [NameFields.MATERIAL_CHIP_PURPLE] = CHIP_VALUES[5],
+            [NameFields.MATERIAL_CHIP_YELLOW] = CHIP_VALUES[5],
             [NameFields.MATERIAL_CHIP_GRAY] = CHIP_VALUES[6],
             [NameFields.MATERIAL_CHIP_BROWN] = CHIP_VALUES[7],
             [NameFields.MATERIAL_CHIP_WHITE] = CHIP_VALUES[8],
-            [NameFields.MATERIAL_CHIP_YELLOW] = CHIP_VALUES[9]
+            [NameFields.MATERIAL_CHIP_BLACK] = CHIP_VALUES[9]
             
             // [NameFields.MATERIAL_CHIP_RED] = CHIP_VALUES[0],
             // [NameFields.MATERIAL_CHIP_BLUE] = CHIP_VALUES[1],
@@ -74,6 +74,13 @@ namespace Config
                 return LevelDifficulty.MEDIUM;
 
             return LevelDifficulty.HARD;
+        }
+
+        public static LevelGameType GetEndGame()
+        {
+            LevelGameType levelGameType = (LevelGameType)Random.Range(0, 1);
+
+            return levelGameType;
         }
     }
 }

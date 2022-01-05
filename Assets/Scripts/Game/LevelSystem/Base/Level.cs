@@ -4,9 +4,9 @@ namespace Game.LevelSystem.Base
 {
     public enum LevelLength
     {
-        SHORT = 8,
-        MEDIUM = 11,
-        LONG = 15
+        SHORT = 11,
+        MEDIUM = 14,
+        LONG = 18
     }
 
     public enum LevelDifficulty
@@ -16,17 +16,24 @@ namespace Game.LevelSystem.Base
         HARD = 5
     }
 
+    public enum LevelGameType
+    {
+        HORSE_RACE
+    }
+
     public class Level
     {
         public int LevelIndex;
         public LevelLength LevelLength;
         public LevelDifficulty LevelDifficulty;
+        public LevelGameType LevelGameType;
 
-        public Level(int levelIndex, LevelLength levelLength, LevelDifficulty levelDifficulty)
+        public Level(int levelIndex, LevelLength levelLength, LevelDifficulty levelDifficulty, LevelGameType levelGameType)
         {
             LevelIndex = levelIndex;
             LevelLength = levelLength;
             LevelDifficulty = levelDifficulty;
+            LevelGameType = levelGameType;
         }
     }
 }

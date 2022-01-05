@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using Config;
+using Data;
+using Game.BetSystem.Controllers;
 using Game.CharacterSystem.Controllers;
 using Game.CharacterSystem.Events;
 using Game.ChipSystem.Base;
 using Game.ChipSystem.Managers;
 using Game.GateSystem.Base;
 using Game.GateSystem.Controllers;
+using Game.MiniGames.Managers;
 using UnityEngine;
 using Utils;
 using Zenject;
@@ -17,14 +20,18 @@ namespace Game.CharacterSystem.Base
     {
         private CharacterInputController _characterInputController;
         private ChipManager _chipManager;
+        private LevelGameManager _levelGameManager;
+        private LevelData _levelData;
+        private BetController _betController;
 
         private Camera _characterCamera;
         private Vector3 _cameraOffset;
 
         [Inject]
-        private void OnInitialize(ChipManager chipManager)
+        private void OnInitialize(ChipManager chipManager, LevelData levelData)
         {
             _chipManager = chipManager;
+            _levelData = levelData;
         }
 
         public override void Init()
@@ -37,15 +44,32 @@ namespace Game.CharacterSystem.Base
             _characterInputController = gameObject.AddComponent<CharacterInputController>();
             _characterInputController.Init();
 
+            _levelGameManager = new LevelGameManager();
+            _betController = new BetController();
+
             SubscribeControllerEvents();
 
             GetEventManager().SubscribeEvent(CharacterEventType.ON_START,
-                () => { Timer.Instance.TimerWait(1f, () => _characterInputController.ActivateController()); });
+                () =>
+                {
+                    Timer.Instance.TimerWait(1f, () =>
+                    {
+                        _characterInputController.ActivateController();
+                        CharacterAnimatorController.PerformRunAnimation();
+                    });
+                });
             
             GetEventManager().SubscribeEvent(CharacterEventType.ON_FINISH, () =>
             {
                 _characterInputController.DeactivateController();
                 GetEventManager().InvokeEvent(CharacterEventType.ON_START);
+            });
+            
+            GetEventManager().SubscribeEvent(CharacterEventType.ON_END_GAME, () =>
+            {
+                _characterInputController.DeactivateController();
+                CharacterAnimatorController.PerformIdleAnimation();
+                StartLevelGame();
             });
         }
 
@@ -79,8 +103,18 @@ namespace Game.CharacterSystem.Base
             if (other.CompareTag("Finish"))
             {
                 Debug.Log("Finish");
-                CharacterEventManager.InvokeEvent(CharacterEventType.ON_FINISH);
+                //GetEventManager().InvokeEvent(CharacterEventType.ON_FINISH);
+                GetEventManager().InvokeEvent(CharacterEventType.ON_END_GAME);
             }
+        }
+
+        public void StartLevelGame()
+        {
+            _chipManager.SetLevelBalance();
+            _betController.Init(_levelData);
+            _betController.ParticipateBets();
+            _betController.SetWinner();
+            _levelGameManager.StartLevelGame(_levelData);
         }
 
         #region Camera

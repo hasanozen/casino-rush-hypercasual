@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Game.LevelSystem.Base;
 using Game.LevelSystem.Managers;
+using Game.MiniGames.Base;
 using UnityEngine;
 using Zenject;
 
@@ -15,8 +17,16 @@ namespace Game.PoolingSystem
             public int size;
         }
 
+        public class LevelGamePool
+        {
+            public string tag;
+            public List<LevelGame> levelGames;
+        }
+
         public List<Pool> pools;
+        public LevelGamePool levelGamePool;
         public Dictionary<string, Queue<GameObject>> poolDictionary;
+        public Dictionary<string, Queue<GameObject>> levelPoolDictionary;
 
         private AssetManager _assetManager;
 
@@ -30,6 +40,13 @@ namespace Game.PoolingSystem
         {
             pools = new List<Pool>();
             poolDictionary = new Dictionary<string, Queue<GameObject>>();
+            levelPoolDictionary = new Dictionary<string, Queue<GameObject>>();
+            
+            levelGamePool = new LevelGamePool
+            {
+                tag = "LevelGames",
+                levelGames = new List<LevelGame>()
+            };
         }
 
         public void CreatePool(string tag, GameObject gameObject, int size)
@@ -90,6 +107,34 @@ namespace Game.PoolingSystem
             return objectToSpawn;
         }
 
+        public void AddLevelGame(LevelGame levelGame)
+        {
+            levelGamePool.levelGames.Add(levelGame);
+        }
+
+        public LevelGame GetLevelGame(LevelGameType levelGameType)
+        {
+            LevelGame game = levelPoolDictionary[levelGamePool.tag]
+                .Where(x => x.GetComponent<LevelGame>().levelGameType == levelGameType).FirstOrDefault().GetComponent<LevelGame>();
+
+            return game;
+        }
+
+        public void SpawnLevelGames()
+        {
+            Queue<GameObject> objectPool = new Queue<GameObject>();
+            
+            for (int i = 0; i < levelGamePool.levelGames.Count; i++)
+            {
+                GameObject game = Instantiate(levelGamePool.levelGames[i].gameObject);
+                game.SetActive(false);
+                
+                objectPool.Enqueue(game);
+            }
+            
+            levelPoolDictionary.Add(levelGamePool.tag, objectPool);
+        }
+
         public void DeactivatePool(string tag)
         {
             if (!poolDictionary.ContainsKey(tag))
@@ -112,6 +157,30 @@ namespace Game.PoolingSystem
             
             for (int i = 0; i < keys.Length; i++)
                 DeactivatePool(keys[i]);
+            
+            DeactivateLevelGames();
+        }
+
+        public void ActivateLevelGame(LevelGameType levelGameType)
+        {
+            LevelGame game = GetLevelGame(levelGameType);
+            game.gameObject.SetActive(true);
+        }
+
+        public void DeactivateLevelGames()
+        {
+            if (!levelPoolDictionary.ContainsKey(levelGamePool.tag))
+            {
+                Debug.Log("Pool with tag " + levelGamePool.tag + " doesn't exist.");
+                return;
+            }
+            
+            foreach (var obj in levelPoolDictionary[levelGamePool.tag])
+            {
+                obj.SetActive(false);
+                obj.transform.position = Vector3.zero;
+                obj.transform.rotation = Quaternion.identity;
+            }
         }
     }
 }

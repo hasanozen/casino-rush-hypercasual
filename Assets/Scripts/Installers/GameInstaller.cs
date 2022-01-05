@@ -1,4 +1,5 @@
-﻿using Game.CharacterSystem.Base;
+﻿using Data;
+using Game.CharacterSystem.Base;
 using Game.ChipSystem.Base;
 using Game.ChipSystem.Managers;
 using Game.LevelSystem.Managers;
@@ -23,6 +24,7 @@ namespace Installers
             Container.BindInstance(levelGenerator).AsSingle().NonLazy();
 
             Container.Bind<AssetManager>().AsSingle().NonLazy();
+            Container.Bind<LevelData>().AsSingle().NonLazy();
         }
     }
 }

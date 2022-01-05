@@ -16,6 +16,7 @@ namespace Game.ChipSystem.Base
 
         private void SubscribeEvents()
         {
+            GetEventManager().SubscribeEvent(ChipEventType.ON_VALUE_CHANGE, OnStacked);
             GetEventManager().SubscribeEvent(ChipEventType.ON_STACKED, OnStacked);
             GetEventManager().SubscribeEvent(ChipEventType.ON_DESTACKED, OnDestacked);
         }
