@@ -27,17 +27,16 @@ namespace Game.BetSystem.Controllers
             int[] bets = new int[_bidders.Count];
             
             Debug.Log("Value: " + value);
-            Dictionary<int, int> existingValues = FindExistingValues(GameConfig.PLATFORM_CHIP_VALUES, value);
-            
-            while (value > 0)
+
+            int left = value % _bidders.Count;
+            value -= left;
+            value /= _bidders.Count;
+
+            for (int i = 0; i < _bidders.Count; i++)
             {
-                for (int i = 0; i < _bidders.Count; i++)
-                {
-                    if (value <= 0) break;
-                    //TODO: Performance issue here, fix it
-                    bets[i]++;
-                    value--;
-                }
+                bets[i] = value;
+                if (i == 0)
+                    bets[i] += left;
             }
 
             for (int i = 0; i < _bidders.Count; i++)
