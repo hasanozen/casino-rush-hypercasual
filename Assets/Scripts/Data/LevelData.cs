@@ -10,6 +10,7 @@ namespace Data
         private int _totalGain;
         private int _levelIndex;
         private LevelGame _levelGame;
+        private bool _isLevelGamePlayed;
 
         public LevelData()
         {
@@ -41,6 +42,11 @@ namespace Data
         {
             _levelGame = levelGame;
         }
+
+        public void ConfirmLevelGameIsPlayed()
+        {
+            _isLevelGamePlayed = true;
+        }
         
         public int GetBalance()
         {
@@ -60,6 +66,11 @@ namespace Data
         public int GetLevelIndex()
         {
             return _levelIndex;
+        }
+
+        public bool CheckIfGamePlayed()
+        {
+            return _isLevelGamePlayed;
         }
 
         public LevelGame GetCurrentLevelGame()

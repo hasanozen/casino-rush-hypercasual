@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using Game.BetSystem.Base;
+using Game.CameraSystem;
 using Game.LevelSystem.Base;
 using Game.MiniGames.Base;
 using UnityEngine;
@@ -67,6 +68,7 @@ namespace Game.MiniGames.HorseRace.Managers
         public override void Init(int winnerID)
         {
             Debug.Log("Initializing Horse Race");
+            SetCameraSequence();
             
             this.winnerHorseId = winnerID;
             //SetHorseBetInfos();
@@ -74,6 +76,20 @@ namespace Game.MiniGames.HorseRace.Managers
             //OpenDoors();
             StartRace();
             //GetWinnerBets();
+        }
+
+        public void SetCameraSequence()
+        {
+            CameraFollow cameraFollow = FindObjectOfType<CameraFollow>();
+            Sequence sequence = DOTween.Sequence();
+
+            sequence.Append(cameraFollow.transform.DOMoveZ(outTrackTransform.position.z - 5f, 6f))
+                .Insert(0,cameraFollow.transform.DORotate(new Vector3(65,0,0), 4f))
+                .Insert(0,cameraFollow.transform.DOMoveY(15f, 2f))
+                .Pause();
+            
+            cameraFollow.SetLevelGameBehavior(sequence);
+
         }
 
         private void OpenDoors()

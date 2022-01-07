@@ -46,6 +46,7 @@ namespace Game.BetSystem.Controllers
                 
                 Debug.Log("Bidder ID: " + i + " | Odd: " + _bidders[i].Odd + " | Bet: " + _bidders[i].Bet);
             }
+            
         }
 
         public void SetWinner()
@@ -54,6 +55,19 @@ namespace Game.BetSystem.Controllers
             _bidders[winner].IsWinner = true;
 
             GetResult();
+        }
+
+        public void SetBetInfos()
+        {
+            BetInfo[] betInfos = Transform.FindObjectsOfType<BetInfo>();
+
+            for (int i = 0; i < betInfos.Length; i++)
+            {
+                float odd = _bidders[i].Odd;
+                float bet = _bidders[i].Bet;
+                string text = "Odd: X" + odd + "\n" + "Bet: " + bet;
+                betInfos[i].SetText(text);
+            }
         }
 
         public void AddDatasToPlayerData()

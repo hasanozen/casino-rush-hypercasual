@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Config;
 using Data;
 using Game.CharacterSystem.Base;
@@ -74,6 +75,11 @@ namespace Game.ChipSystem.Managers
         public void SetLevelBalance()
         {
             container.SetLevelBalance();
+        }
+
+        public async Task MoveChipsToBanks(float time)
+        {
+            await container.BidChips(time);
         }
 
         public void RefreshChips()

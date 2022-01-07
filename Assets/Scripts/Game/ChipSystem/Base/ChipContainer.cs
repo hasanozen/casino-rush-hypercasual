@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Config;
 using Data;
+using DG.Tweening;
 using Game.ChipSystem.Events;
 using Game.LevelSystem.Managers;
+using Game.MiniGames.Base;
 using Game.PoolingSystem;
 using NUnit.Framework;
 using UnityEditor.Experimental.GraphView;
@@ -231,6 +235,31 @@ namespace Game.ChipSystem.Base
             float posZ = 0;
             
             chip.transform.localPosition = new Vector3(posX, posY, posZ);
+        }
+        
+        public async Task BidChips(float time)
+        {
+            float animDuration = .3f;
+            float interval = time / _chips.Count;
+            int currentBank;
+            ChipBank[] banks = FindObjectsOfType<ChipBank>().ToArray();
+        
+            currentBank = 0;
+            for (int i = _chips.Count - 1; i >= 0; i--)
+            {
+                if (currentBank >= banks.Length)
+                    currentBank = 0;
+        
+                _chips[i].transform.parent = null;
+                _chips[i].transform
+                    .DOMove(banks[currentBank].transform.position, animDuration)
+                    .OnComplete(_chips[i].DeactivateChip);
+                
+                await Task.Yield();
+        
+                currentBank++;
+            }
+        
         }
 
         private void UpdateTotalChipValues()
