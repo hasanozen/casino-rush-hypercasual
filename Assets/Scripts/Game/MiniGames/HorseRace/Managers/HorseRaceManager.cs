@@ -193,16 +193,13 @@ namespace Game.MiniGames.HorseRace.Managers
     
         void ChangeWinnerHorse()
         {
-            // var betInfos = MenuManager.Instance.elements[11].transform.GetComponentsInChildren<BetInfo>();
-            // var winnerHorseMenu = betInfos?.FirstOrDefault(x => x.id == CurrentWinnerHorse);
-            // var winnerHorseMenuObject = winnerHorseMenu.transform.Find("WinnerHorseBG");
-            //
-            // foreach (BetInfo betInfo in betInfos)
-            // {
-            //     betInfo.transform.Find("WinnerHorseBG").gameObject.SetActive(false);
-            // }
-            //
-            // winnerHorseMenuObject.gameObject.SetActive(true);
+            BetInfo[] betInfos = FindObjectsOfType<BetInfo>();
+
+            foreach (var betInfo in betInfos)
+                betInfo.DeactivateWinnerBg();
+                
+            
+            betInfos.FirstOrDefault(x => x.ID == CurrentWinnerHorse).ActivateWinnerBg();
         
             if (OnWinnerChangedEvent != null)
                 OnWinnerChangedEvent(CurrentWinnerHorse);

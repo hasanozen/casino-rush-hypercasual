@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Config;
 using Data;
+using DG.Tweening;
 using Game.BetSystem.Base;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -60,14 +61,24 @@ namespace Game.BetSystem.Controllers
         public void SetBetInfos()
         {
             BetInfo[] betInfos = Transform.FindObjectsOfType<BetInfo>();
+            Color32[] colors = new[]
+            {
+                new Color32(142, 68, 173, 255),
+                new Color32(41, 128, 185, 255),
+                new Color32(231, 76, 60, 255)
+            };
 
             for (int i = 0; i < betInfos.Length; i++)
             {
+                _bidders[i].ID = betInfos.Length - 1 - i;
                 float odd = _bidders[i].Odd;
                 float bet = _bidders[i].Bet;
-                string text = "Odd: X" + odd + "\n" + "Bet: " + bet;
-                betInfos[i].SetText(text);
+                betInfos[i].ID = betInfos.Length - 1 - i;
+                betInfos[i].ApplyInformations(colors[i], odd.ToString(), bet.ToString());
             }
+
+            var betParent = betInfos[0].transform.parent.GetComponent<RectTransform>();
+            betParent.DOAnchorPosY(0, .5f).SetEase(Ease.OutCubic);
         }
 
         public void AddDatasToPlayerData()

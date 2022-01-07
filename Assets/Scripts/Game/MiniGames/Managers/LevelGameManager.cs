@@ -1,4 +1,5 @@
 ﻿using Data;
+using Game.BetSystem.Base;
 using UnityEngine;
 
 namespace Game.MiniGames.Managers
@@ -7,7 +8,14 @@ namespace Game.MiniGames.Managers
     {
         public void StartLevelGame(LevelData levelData)
         {
-            levelData.GetCurrentLevelGame().Init(1);
+            levelData.GetCurrentLevelGame().Init(GetRandomWinner());
+        }
+
+        private int GetRandomWinner()
+        {
+            int bidderCount = Transform.FindObjectsOfType<Bidder>().Length;
+
+            return Random.Range(0, bidderCount);
         }
     }
 }
