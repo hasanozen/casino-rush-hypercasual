@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Config;
 using Data;
+using DG.Tweening;
 using Game.BetSystem.Controllers;
 using Game.CameraSystem;
 using Game.CharacterSystem.Controllers;
@@ -11,6 +13,7 @@ using Game.ChipSystem.Managers;
 using Game.GateSystem.Base;
 using Game.GateSystem.Controllers;
 using Game.MiniGames.Managers;
+using TMPro;
 using UnityEngine;
 using Utils;
 using Zenject;
@@ -28,6 +31,7 @@ namespace Game.CharacterSystem.Base
 
         private Camera _characterCamera;
         private Vector3 _cameraOffset;
+        private TextMeshPro _balanceText;
 
         [Inject]
         private void OnInitialize(ChipManager chipManager, LevelData levelData)
@@ -50,6 +54,7 @@ namespace Game.CharacterSystem.Base
             _betController = new BetController();
 
             _cameraFollow = FindObjectOfType<CameraFollow>();
+            _balanceText = transform.Find("BalanceText").Find("Text").GetComponent<TextMeshPro>();
 
             SubscribeControllerEvents();
 
@@ -100,12 +105,16 @@ namespace Game.CharacterSystem.Base
             {
                 _chipManager.AddChip(other.GetComponent<Chip>().Value);
                 other.GetComponent<Chip>().DeactivateChip();
+
+                _balanceText.text = "$" + _levelData.GetCurrentBalance();
             }
 
             if (other.GetComponent<GateBase>() != null)
             {
                 GateBase gate = other.GetComponent<GateBase>();
                 _chipManager.ProcessGate(gate.EffectType, gate.EffectValue);
+
+                _balanceText.text = "$" + _levelData.GetCurrentBalance();
             }
 
             if (other.CompareTag("Finish"))
@@ -126,6 +135,8 @@ namespace Game.CharacterSystem.Base
             _betController.ParticipateBets();
             _betController.SetWinner();
             
+            StartCoroutine(ResetBalanceText());
+            
             await _chipManager.MoveChipsToBanks(2f);
             
             _betController.SetBetInfos();
@@ -134,6 +145,24 @@ namespace Game.CharacterSystem.Base
             {
                 _levelGameManager.StartLevelGame(_levelData);
             }); 
+        }
+
+        public IEnumerator ResetBalanceText()
+        {
+            int balance = _levelData.GetCurrentBalance();
+            int decreaseAmount = balance / 10;
+
+            while (balance > 0)
+            {
+                balance -= decreaseAmount;
+
+                if (balance < 0)
+                    balance = 0;
+
+                _balanceText.text = balance.ToString();
+                
+                yield return new WaitForSeconds(.05f);
+            }
         }
     }
 }

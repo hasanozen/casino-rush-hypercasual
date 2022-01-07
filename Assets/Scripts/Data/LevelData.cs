@@ -5,6 +5,7 @@ namespace Data
 {
     public class LevelData
     {
+        private int _currentBalance;
         private int _balance;
         private int _endGameBonus;
         private int _totalGain;
@@ -17,6 +18,11 @@ namespace Data
             _levelIndex = PlayerData.Instance.LastLevelIndex;
         }
 
+        public void SetCurrentBalance(int value)
+        {
+            _currentBalance = value;
+        }
+        
         public void SetBalance(int value)
         {
             Debug.Log("Balance Set: " + value);
@@ -46,6 +52,11 @@ namespace Data
         public void ConfirmLevelGameIsPlayed()
         {
             _isLevelGamePlayed = true;
+        }
+
+        public int GetCurrentBalance()
+        {
+            return _currentBalance;
         }
         
         public int GetBalance()

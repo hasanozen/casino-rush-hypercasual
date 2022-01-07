@@ -263,8 +263,10 @@ namespace Game.ChipSystem.Base
         }
 
         private void UpdateTotalChipValues()
-        {
-            TotalValue = GetTotalChipValues();
+        { 
+            int value = GetTotalChipValues();
+            _levelData.SetCurrentBalance(value);
+            TotalValue = value;
         }
 
         private int GetTotalChipValues()
