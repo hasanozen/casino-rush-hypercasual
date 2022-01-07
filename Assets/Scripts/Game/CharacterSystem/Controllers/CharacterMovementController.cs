@@ -22,7 +22,7 @@ namespace Game.CharacterSystem.Controllers
 
         public void MoveSide()
         {
-            float input = Input.GetAxis("Mouse X") * _swipeSpeed * Time.deltaTime;
+            float input = Input.GetAxis("Mouse X") * _swipeSpeed * Time.fixedDeltaTime;
             
             _characterTransform.position = new Vector3(
                 Mathf.Clamp(
